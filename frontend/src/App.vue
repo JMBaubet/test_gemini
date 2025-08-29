@@ -34,6 +34,7 @@ import axios from 'axios';
 
 const isBackendOnline = ref(false);
 let intervalId = null;
+const backendPollingInterval = ref(5000); // Default value
 
 const backendStatus = computed(() => {
   if (isBackendOnline.value) {
@@ -42,6 +43,21 @@ const backendStatus = computed(() => {
     return { icon: 'mdi-alert-circle', color: 'error' };
   }
 });
+
+const fetchParameters = async () => {
+  try {
+    const response = await axios.get('http://localhost:3000/parameters');
+    const parameters = response.data.parameters;
+    const pollingParam = parameters.backendPollingInterval; // Access directly by key
+    if (pollingParam) {
+      const newInterval = pollingParam.overrideValue !== null ? pollingParam.overrideValue : pollingParam.defaultValue;
+      backendPollingInterval.value = newInterval;
+    }
+  } catch (error) {
+    console.error('Error fetching parameters:', error);
+    // Fallback to default polling interval if fetching fails
+  }
+};
 
 const checkBackendStatus = async () => {
   try {
@@ -52,9 +68,10 @@ const checkBackendStatus = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchParameters(); // Fetch parameters first
   checkBackendStatus(); // Initial check
-  intervalId = setInterval(checkBackendStatus, 5000); // Check every 5 seconds
+  intervalId = setInterval(checkBackendStatus, backendPollingInterval.value); // Use the fetched interval
 });
 
 onBeforeUnmount(() => {

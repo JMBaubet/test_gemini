@@ -1,0 +1,13 @@
+{
+  "parameters": {
+    "backendPollingInterval": {
+      "description": "Intervalle auquel le frontend interroge le backend pour connaître son état.",
+      "defaultValue": 5000,
+      "overrideValue": null,
+      "minValue": 1000,
+      "maxValue": 60000,
+      "unit": "ms",
+      "type": "integer"
+    }
+  }
+}
