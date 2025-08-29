@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app color="primary" dark>
+      <v-icon :color="backendStatus.color" class="mr-2">{{ backendStatus.icon }}</v-icon>
       <v-btn>Header Button</v-btn>
     </v-app-bar>
 
@@ -28,7 +29,39 @@
 </template>
 
 <script setup>
-  // No script logic needed for now
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import axios from 'axios';
+
+const isBackendOnline = ref(false);
+let intervalId = null;
+
+const backendStatus = computed(() => {
+  if (isBackendOnline.value) {
+    return { icon: 'mdi-check-circle', color: 'success' };
+  } else {
+    return { icon: 'mdi-alert-circle', color: 'error' };
+  }
+});
+
+const checkBackendStatus = async () => {
+  try {
+    const response = await axios.get('http://localhost:3000/health');
+    isBackendOnline.value = response.status === 200;
+  } catch (error) {
+    isBackendOnline.value = false;
+  }
+};
+
+onMounted(() => {
+  checkBackendStatus(); // Initial check
+  intervalId = setInterval(checkBackendStatus, 5000); // Check every 5 seconds
+});
+
+onBeforeUnmount(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
 </script>
 
 <style>
